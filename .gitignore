@@ -1,0 +1,10 @@
+target/
+.bsp/
+.metals/
+.bloop/
+.vscode/
+project/project/
+*.class
+.idea/
+node_modules/
+audio/

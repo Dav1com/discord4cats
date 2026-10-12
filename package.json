@@ -1,0 +1,8 @@
+{
+  "name": "discord-scala-js-deps",
+  "private": true,
+  "description": "Node.js dependencies for running the Scala.js build (tests and examples).",
+  "dependencies": {
+    "@snazzah/davey": "0.1.12"
+  }
+}
