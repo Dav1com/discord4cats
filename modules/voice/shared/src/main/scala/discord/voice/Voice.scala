@@ -22,7 +22,7 @@ import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import discord.gateway.{Gateway, GatewayEvent}
 import discord.gateway.ws.{WsClient, WsConnection, WsMessage}
-import discord.model.Snowflake
+import discord.model.{Redact, Snowflake}
 import discord.voice.dave.{DaveManager, DaveOutbound, DaveSession}
 import fs2.Stream
 import fs2.io.net.Network
@@ -85,7 +85,8 @@ object Voice:
     yield conn
 
   /** What the main gateway tells us about our voice session. */
-  final case class ServerInfo(sessionId: String, token: String, endpoint: String)
+  final case class ServerInfo(sessionId: String, token: String, endpoint: String):
+    override def toString: String = Redact.product(this, "token")
 
   private def awaitServer[F[_]: Async](
       events: Stream[F, GatewayEvent],
@@ -138,7 +139,8 @@ object Voice:
 
   private given Decoder[ReadyInfo] = Decoder.forProduct4("ssrc", "ip", "port", "modes")(ReadyInfo.apply)
 
-  private final case class SessionInfo(secretKey: ByteVector, daveVersion: Int)
+  private final case class SessionInfo(secretKey: ByteVector, daveVersion: Int):
+    override def toString: String = Redact.product(this, "secretKey")
 
   /** Opens the voice connection described by `info`. Exposed for custom setups and tests. */
   def connect[F[_]: Async: Network: LiftIO](
@@ -209,7 +211,7 @@ object Voice:
           val c = json.hcursor
           val d = c.downField("d")
           val op = c.get[Int]("op").getOrElse(-1)
-          log.debug(s"Voice gateway op $op: ${d.focus.fold("")(_.noSpaces.take(200))}") >>
+          log.debug(s"Voice gateway op $op: ${d.focus.fold("")(Redact.json(_).noSpaces.take(200))}") >>
             c.get[Option[Int]]("seq").toOption.flatten.traverse_(seq.set) >>
             (op match
               case Op.Ready              => F.fromEither(d.as[ReadyInfo]).flatMap(readyD.complete).void

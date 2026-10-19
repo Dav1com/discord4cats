@@ -130,6 +130,8 @@ final case class Interaction(
   /** The invoking user, whether the interaction came from a guild (via `member`) or a DM. */
   def invoker: Option[User] = member.flatMap(_.user).orElse(user)
 
+  override def toString: String = Redact.product(this, "token")
+
 final case class InteractionCallbackData(
     tts: Option[Boolean] = None,
     content: Option[String] = None,

@@ -47,7 +47,8 @@ final case class GatewayConfig(
     /** Events buffered per subscriber before the gateway waits for that subscriber. */
     bufferSize: Int = 1024,
     maxBackoff: FiniteDuration = 60.seconds
-)
+):
+  override def toString: String = Redact.product(this, "token")
 
 /** The gateway closed with a code that means reconnecting won't help (bad token, disallowed intents, ...). */
 final case class GatewayClosed(code: Int, reason: String)

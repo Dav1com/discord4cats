@@ -121,3 +121,18 @@ class CodecSuite extends FunSuite:
     val json = InteractionResponse.message("hi", ephemeral = true).asJson
     assertEquals(json, Json.obj("type" := 4, "data" := Json.obj("content" := "hi", "flags" := 64)))
   }
+
+  test("secrets are redacted from toString and logged JSON") {
+    val i = Interaction(Snowflake(1), Snowflake(2), InteractionType(2), "itok-secret")
+    assert(!i.toString.contains("itok-secret"), i.toString)
+    assert(i.toString.startsWith("Interaction(1, 2,"), i.toString)
+    val j = Json.obj("token" := "t", "nested" := Json.arr(Json.obj("secret_key" := List(1, 2))), "ok" := 1)
+    assertEquals(
+      Redact.json(j),
+      Json.obj(
+        "token" := "<redacted>",
+        "nested" := Json.arr(Json.obj("secret_key" := "<redacted>")),
+        "ok" := 1
+      )
+    )
+  }
