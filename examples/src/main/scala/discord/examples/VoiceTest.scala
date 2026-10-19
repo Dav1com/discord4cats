@@ -18,7 +18,6 @@ package discord.examples
 
 import cats.effect.{IO, Resource}
 import cats.effect.std.Env
-import cats.syntax.all.*
 import discord.gateway.{Gateway, GatewayConfig, GatewayEvent}
 import discord.model.*
 import discord.rest.DiscordRest

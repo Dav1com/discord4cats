@@ -163,3 +163,13 @@ class GatewaySuite extends CatsEffectSuite:
       case other                        => fail(s"Expected GatewayClosed(4004), got $other")
     }
   }
+
+  test("tokens don't show up in toString") {
+    val config = GatewayConfig("bot-secret", Intents(0))
+    assert(!config.toString.contains("bot-secret"), config.toString)
+    val vsu = GatewayEvent.VoiceServerUpdate("voice-secret", Snowflake(1), Some("host"))
+    assertEquals(vsu.toString, "VoiceServerUpdate(<redacted>, 1, Some(host))")
+    assertEquals(GatewayEvent.Resumed.toString, "Resumed")
+    val unknown = GatewayEvent.Unknown("X", Json.obj("token" := "unknown-secret"), None).toString
+    assert(!unknown.contains("unknown-secret"), unknown)
+  }

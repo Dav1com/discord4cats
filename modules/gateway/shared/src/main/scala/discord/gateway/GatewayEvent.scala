@@ -56,6 +56,12 @@ enum GatewayEvent:
   /** An event this library doesn't model, or one that failed to decode (then `error` says why). */
   case Unknown(name: String, data: Json, error: Option[String])
 
+  override def toString: String = this match
+    case e: VoiceServerUpdate => Redact.product(e, "token")
+    case e: Unknown           => Redact.product(e.copy(data = Redact.json(e.data)))
+    case Resumed              => productPrefix
+    case e                    => Redact.product(e)
+
 final case class MessageReactionEvent(
     userId: Snowflake,
     channelId: Snowflake,
