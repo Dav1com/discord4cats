@@ -108,7 +108,10 @@ final case class InteractionData(
     componentType: Option[ComponentType] = None,
     values: List[String] = Nil,
     components: List[Component] = Nil
-) derives ConfiguredCodec
+) derives ConfiguredCodec:
+  /** The submitted modal field with this custom ID, wherever it is nested (e.g. inside a label). */
+  def field(customId: String): Option[Component] =
+    components.flatMap(_.flatten).find(_.customId.contains(customId))
 
 final case class Interaction(
     id: Snowflake,
@@ -176,6 +179,16 @@ object InteractionResponse:
         )
       )
     )
+
+  /** A Components V2 message: no content or embeds, the components are the whole message. */
+  def componentsV2(components: List[Component], ephemeral: Boolean = false): InteractionResponse =
+    InteractionResponse(
+      InteractionCallbackType.ChannelMessageWithSource,
+      Some(InteractionCallbackData(components = Some(components), flags = Some(v2Flags(ephemeral))))
+    )
+
+  private[discord] def v2Flags(ephemeral: Boolean): MessageFlags =
+    if ephemeral then MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral else MessageFlags.IsComponentsV2
 
   def deferred(ephemeral: Boolean = false): InteractionResponse =
     InteractionResponse(

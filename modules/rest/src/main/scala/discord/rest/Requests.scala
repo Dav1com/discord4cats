@@ -49,6 +49,10 @@ final case class CreateMessage(
 object CreateMessage:
   def text(content: String): CreateMessage = CreateMessage(content = Some(content))
 
+  /** A Components V2 message. Upload files with `files` and reference them as `attachment://<filename>`. */
+  def componentsV2(components: Component*): CreateMessage =
+    CreateMessage(components = components.toList, flags = Some(MessageFlags.IsComponentsV2))
+
   given Encoder[CreateMessage] = Encoder.instance { m =>
     JsonObj(
       "content" :=? m.content,

@@ -136,3 +136,64 @@ class CodecSuite extends FunSuite:
       )
     )
   }
+
+  test("Components V2 messages encode Discord's shape, omitting fields that don't apply") {
+    val c = Component
+      .container(
+        Component.section(Component.thumbnail("https://x/a.png"), Component.textDisplay("# Hi")),
+        Component.separator(spacing = SeparatorSpacing.Large),
+        Component.mediaGallery(MediaGalleryItem("attachment://b.png")),
+        Component.actionRow(Component.button("ok", "OK"))
+      )
+      .copy(accentColor = Some(0xff0000))
+    val json = InteractionResponse.componentsV2(List(c), ephemeral = true).asJson
+    val expected = Json.obj(
+      "type" := 4,
+      "data" := Json.obj(
+        "flags" := (1 << 15 | 1 << 6),
+        "components" := List(
+          Json.obj(
+            "type" := 17,
+            "components" := List(
+              Json.obj(
+                "type" := 9,
+                "components" := List(Json.obj("type" := 10, "content" := "# Hi")),
+                "accessory" := Json.obj("type" := 11, "media" := Json.obj("url" := "https://x/a.png"))
+              ),
+              Json.obj("type" := 14, "divider" := true, "spacing" := 2),
+              Json.obj(
+                "type" := 12,
+                "items" := List(Json.obj("media" := Json.obj("url" := "attachment://b.png")))
+              ),
+              Json.obj(
+                "type" := 1,
+                "components" := List(
+                  Json.obj("type" := 2, "custom_id" := "ok", "style" := 1, "label" := "OK")
+                )
+              )
+            ),
+            "accent_color" := 0xff0000
+          )
+        )
+      )
+    )
+    assertEquals(json, expected)
+    assertEquals(decode[Component](c.asJson.noSpaces), Right(c))
+  }
+
+  test("decodes a modal submission with labelled fields") {
+    val json = """{
+      "id": "1300000000000000001", "application_id": "1300000000000000002", "type": 5, "token": "tok",
+      "user": {"id": "1300000000000000003", "username": "carol"},
+      "data": {"custom_id": "feedback", "components": [
+        {"type": 18, "id": 1, "component": {"type": 4, "id": 2, "custom_id": "text", "value": "great"}},
+        {"type": 18, "id": 3, "component": {"type": 3, "id": 4, "custom_id": "rating", "values": ["5"]}},
+        {"type": 10, "id": 5}
+      ]}
+    }"""
+    val i = decode[Interaction](json).fold(e => fail(e.toString), identity)
+    val data = i.data.get
+    assertEquals(data.field("text").flatMap(_.value), Some("great"))
+    assertEquals(data.field("rating").map(_.values), Some(List("5")))
+    assertEquals(data.components.head.component.map(_.`type`), Some(ComponentType.TextInput))
+  }

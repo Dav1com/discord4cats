@@ -80,6 +80,28 @@ final class CommandContext[F[_]] private[commands] (
           .void
     })
 
+  /** Like [[reply]], for a Components V2 message: the components are the whole message. */
+  def replyComponents(components: List[Component], ephemeral: Boolean = false): F[Unit] =
+    lock.lock.surround(state.get.flatMap {
+      case State.Pending =>
+        respondUnlocked(InteractionResponse.componentsV2(components, ephemeral))
+      case State.Deferred =>
+        rest
+          .editOriginalInteractionResponse(
+            interaction.applicationId,
+            interaction.token,
+            EditMessage(components = Optional(components), flags = Optional(MessageFlags.IsComponentsV2))
+          ) >> state.set(State.Replied)
+      case State.Replied =>
+        rest
+          .createFollowupMessage(
+            interaction.applicationId,
+            interaction.token,
+            CreateMessage(components = components, flags = Some(InteractionResponse.v2Flags(ephemeral)))
+          )
+          .void
+    })
+
   /** Acknowledges now and replies later ("Bot is thinking..."). No-op if already answered. */
   def defer(ephemeral: Boolean = false): F[Unit] =
     lock.lock.surround(state.get.flatMap {

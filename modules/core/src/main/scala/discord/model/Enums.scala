@@ -103,6 +103,23 @@ object ComponentType extends IntEnum[ComponentType](ComponentType(_), _.value):
   val RoleSelect = ComponentType(6)
   val MentionableSelect = ComponentType(7)
   val ChannelSelect = ComponentType(8)
+  // Components V2 (messages need MessageFlags.IsComponentsV2)
+  val Section = ComponentType(9)
+  val TextDisplay = ComponentType(10)
+  val Thumbnail = ComponentType(11)
+  val MediaGallery = ComponentType(12)
+  val File = ComponentType(13)
+  val Separator = ComponentType(14)
+  val Container = ComponentType(17)
+  // Modals only
+  val Label = ComponentType(18)
+  val FileUpload = ComponentType(19)
+
+/** Vertical padding of a [[ComponentType.Separator]]. */
+final case class SeparatorSpacing(value: Int)
+object SeparatorSpacing extends IntEnum[SeparatorSpacing](SeparatorSpacing(_), _.value):
+  val Small = SeparatorSpacing(1)
+  val Large = SeparatorSpacing(2)
 
 /** Bit flags on a message, e.g. [[MessageFlags.Ephemeral]] for interaction replies only the invoker sees. */
 final case class MessageFlags(value: Int):
@@ -115,3 +132,7 @@ object MessageFlags extends IntEnum[MessageFlags](MessageFlags(_), _.value):
   val Loading = MessageFlags(1 << 7)
   val SuppressNotifications = MessageFlags(1 << 12)
   val IsVoiceMessage = MessageFlags(1 << 13)
+
+  /** The message is laid out with Components V2: no `content` or `embeds`, only `components`. Can't be unset.
+    */
+  val IsComponentsV2 = MessageFlags(1 << 15)
